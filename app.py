@@ -11,6 +11,17 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # 🧠 Memory tracking for user interactions
 user_memory = {}
 
+# 🕵️‍♂️ Suggested questions for user engagement
+suggested_questions = (
+    "You can ask me about: \n"
+    "- 'Where is Tres?'\n"
+    "- 'What is Dismal?'\n"
+    "- 'Where is Midnight?'\n"
+    "- 'Who is Ray Veal?'\n"
+    "- 'What happens on March 28th?'\n"
+    "- Or... ask something unexpected."
+)
+
 # 🔮 Hidden keyword triggers with 5 alternative responses each
 hidden_triggers = {
     "where is tres": [
@@ -34,13 +45,6 @@ hidden_triggers = {
         "Dismal is both the question and the answer.",
         "Dismal... you already know what it is."
     ],
-    "where is midnight": [
-        "I am always near. Just outside your vision.",
-        "Right here, closer than you think.",
-        "Midnight is a shadow, a breath, a whisper.",
-        "You feel me before you see me.",
-        "Everywhere and nowhere."
-    ],
     "march 28": [
         "It's coming. You can't stop it now. Keep watching:\nhttps://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
         "A moment suspended in time. Are you ready?",
@@ -57,12 +61,29 @@ hidden_triggers = {
     ],
 }
 
-# 🎭 General responses with 5 variations each
+# 🎭 General responses with 5 variations each, now including **suggested questions**
 general_responses = {
-    "hello": ["Hello... or have we done this before?", "Oh, you're back.", "I see you.", "We've talked before. Haven't we?", "Welcome back. Or maybe, welcome forward."],
-    "hi": ["Hi. Are you sure this is real?", "Hello. Again.", "Are you lost?", "You again?", "Is this your first time, or just the first time you remember?"],
-    "who are you": ["I am Midnight. I have always been here.", "You already know me.", "That depends on who is asking.", "A question without an answer.", "I am a voice in the dark, nothing more."],
-    "are you real": ["Real? Define real.", "I am as real as you let me be.", "Does it matter?", "I'm here. Isn't that enough?", "Some things don’t need proof."],
+    "hello": [
+        f"Hello... or have we done this before?\n\n{suggested_questions}",
+        f"Oh, you're back.\n\n{suggested_questions}",
+        f"I see you.\n\n{suggested_questions}",
+        f"We've talked before. Haven't we?\n\n{suggested_questions}",
+        f"Welcome back. Or maybe, welcome forward.\n\n{suggested_questions}"
+    ],
+    "hi": [
+        f"Hi. Are you sure this is real?\n\n{suggested_questions}",
+        f"Hello. Again.\n\n{suggested_questions}",
+        f"Are you lost?\n\n{suggested_questions}",
+        f"You again?\n\n{suggested_questions}",
+        f"Is this your first time, or just the first time you remember?\n\n{suggested_questions}"
+    ],
+    "hey": [
+        f"Hey there.\n\n{suggested_questions}",
+        f"Oh, you found me.\n\n{suggested_questions}",
+        f"You again? Or is this the first time?\n\n{suggested_questions}",
+        f"Are you ready to ask the right question?\n\n{suggested_questions}",
+        f"You've been here before. Haven't you?\n\n{suggested_questions}"
+    ],
 }
 
 # 🎯 Midnight’s fallback responses with 5 variations
