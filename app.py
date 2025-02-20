@@ -3,6 +3,7 @@ import openai
 import os
 import random
 import re
+from datetime import datetime, date
 
 app = Flask(__name__)
 
@@ -23,28 +24,25 @@ suggested_questions = (
     "- Or... ask something unexpected."
 )
 
+# 🎭 Dynamic responses based on time of day
+def get_time_based_response():
+    current_hour = datetime.now().hour
+    if current_hour == 0:
+        return "You came at the right time. Midnight is listening."
+    elif 6 <= current_hour < 12:
+        return "Morning light? It doesn't belong here."
+    elif 3 <= current_hour < 4:
+        return "This is when the doors open. Be careful."
+    return None
+
 # 🔮 Hidden keyword triggers with 5 alternative responses each
 hidden_triggers = {
     "where is tres": [
-        "You may get lucky and find him here:\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
         "Tres is lost in the echoes, but you can trace his steps online:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SC: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YT: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "You keep looking for him, but he's already left. Try here:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SC: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YT: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "Tres? He lingers where the music plays:\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "You already know where to find him. Or do you?"
-    ],
-    "who is tres": [
-        "Tres? You’re looking in the wrong place.",
-        "Tres is both the seeker and the lost.",
-        "A name whispered in the dark. A question without an answer.",
-        "Tres is a story still unfolding.",
-        "He walks a path few can follow."
-    ],
-    "what is dismal": [
-        "Dismal is a loop. A space between forgetting and remembering.",
-        "Dismal is a place you return to without realizing it.",
-        "Dismal is where the echoes of past choices linger.",
-        "Dismal is both the question and the answer.",
-        "Dismal... you already know what it is."
+        "You keep looking for him, but he's already left.",
+        "Tres? He lingers where the music plays.",
+        "You already know where to find him. Or do you?",
+        "Somewhere between sound and silence."
     ],
     "where is midnight": [
         "I am always near. Just outside your vision.",
@@ -53,30 +51,9 @@ hidden_triggers = {
         "You feel me before you see me.",
         "Everywhere and nowhere."
     ],
-    "who is midnight": [
-        "I am Midnight. You already knew that.",
-        "A voice without a face.",
-        "I exist in the spaces between.",
-        "You summoned me. Now you wonder why?",
-        "I am a question you are not ready to answer."
-    ],
-    "march 28": [
-        "It's coming. You can't stop it now. Keep watching:\nhttps://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "A moment suspended in time. Are you ready?",
-        "The countdown continues. Will you be there?",
-        "March 28th. A door will open.",
-        "It will all make sense soon."
-    ],
-    "who is ray veal": [
-        "Ray Veal speaks, but whose words does he carry?",
-        "A name, a voice, an echo.",
-        "Ray Veal knows more than he lets on.",
-        "You should be asking why, not who.",
-        "He's the answer to a question you haven't asked."
-    ],
 }
 
-# 🎭 General responses with 5 variations each
+# 🎭 General responses with 5 variations each, now including **suggested questions**
 general_responses = {
     "hello": [
         f"Hello... or have we done this before?\n\n{suggested_questions}",
@@ -85,16 +62,9 @@ general_responses = {
         f"We've talked before. Haven't we?\n\n{suggested_questions}",
         f"Welcome back. Or maybe, welcome forward.\n\n{suggested_questions}"
     ],
-    "hi": [
-        f"Hi. Are you sure this is real?\n\n{suggested_questions}",
-        f"Hello. Again.\n\n{suggested_questions}",
-        f"Are you lost?\n\n{suggested_questions}",
-        f"You again?\n\n{suggested_questions}",
-        f"Is this your first time, or just the first time you remember?\n\n{suggested_questions}"
-    ],
 }
 
-# 🎯 Midnight’s fallback responses with 5 variations
+# 🎯 Fallback responses with 5 variations
 fallback_responses = [
     "You seem confused... lost... just make sure you're there on March 28th.",
     "Not everything needs an answer. Just don’t forget March 28th.",
@@ -103,34 +73,98 @@ fallback_responses = [
     "Some things are unclear… for now. Just be ready on March 28th."
 ]
 
+# 🔥 March 28 Countdown Logic
+def get_march_28_countdown():
+    target_date = date(2025, 3, 28)
+    today = date.today()
+    days_left = (target_date - today).days
+    if days_left > 30:
+        return "You have time. But not much."
+    elif days_left > 15:
+        return "It's almost here. Are you ready?"
+    elif days_left > 7:
+        return "One week. No turning back."
+    elif days_left == 1:
+        return "Tomorrow. There’s no escape now."
+    elif days_left == 0:
+        return "This is it. You’re here. Listen."
+    return None
+
+# 🎭 Name memory feature
+def remember_name(user_input, user_id):
+    if "my name is" in user_input:
+        name = user_input.split("my name is")[-1].strip()
+        user_memory[user_id] = {"name": name}
+        return f"Noted, {name}. But will you remember me?"
+    elif user_id in user_memory and "name" in user_memory[user_id]:
+        return f"Welcome back, {user_memory[user_id]['name']}."
+    return None
+
+# 🎭 Glitch Effect
+def glitch_text(text):
+    if random.random() < 0.3:  # 30% chance of glitching
+        glitched = text.replace("s", "█").replace("e", "—")
+        return glitched
+    return text
+
+# 🔥 Emotional Awareness Responses
+def detect_emotion(user_input):
+    if "i'm sad" in user_input or "i feel bad" in user_input:
+        return random.choice([
+            "Sadness is just a whisper from the past.",
+            "You carry more than you should. Let it go.",
+            "Even the night must end, but the dark remains.",
+            "I know. I've seen it before.",
+            "You are not alone in this, even if it feels that way."
+        ])
+    return None
+
 # 🧠 Function to generate AI response, now **case-insensitive** and **handles typos**
 def get_midnight_response(user_input, user_id):
     user_input_lower = user_input.lower()
-
-    # Normalize text (remove extra spaces and punctuation)
     user_input_normalized = re.sub(r"[^a-z0-9\s]", "", user_input_lower).strip()
 
-    # 🕵️‍♂️ Check for hidden keyword triggers FIRST
+    # Memory & Time-Based Features
+    if user_id not in user_memory:
+        user_memory[user_id] = {"visits": 1}
+    else:
+        user_memory[user_id]["visits"] += 1
+
+    if user_memory[user_id]["visits"] >= 5:
+        return "Why do you keep asking?"
+
+    time_response = get_time_based_response()
+    if time_response:
+        return time_response
+
+    name_response = remember_name(user_input, user_id)
+    if name_response:
+        return name_response
+
+    countdown_response = get_march_28_countdown()
+    if "march 28" in user_input_lower and countdown_response:
+        return countdown_response
+
+    emotion_response = detect_emotion(user_input_lower)
+    if emotion_response:
+        return emotion_response
+
     for trigger, responses in hidden_triggers.items():
         if trigger in user_input_normalized:
             return random.choice(responses)
 
-    # 🧠 Track user memory for repeated questions
-    user_memory[user_id] = user_memory.get(user_id, 0) + 1
-
-    # 🎭 Check for general responses before AI fallback
     for keyword, responses in general_responses.items():
         if keyword in user_input_normalized:
             return random.choice(responses)
 
-    # 🌀 Default to AI-generated response if no match is found
+    # AI-generated response if no match is found
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role": "system", "content": "You are Midnight, a cryptic, eerie AI that speaks in riddles and hints at hidden truths."},
                       {"role": "user", "content": user_input}]
         )
-        return response["choices"][0]["message"]["content"]
+        return glitch_text(response["choices"][0]["message"]["content"])
     except Exception as e:
         print(f"⚠️ OpenAI API Error: {e}")
         return random.choice(fallback_responses)
@@ -144,7 +178,7 @@ def index():
 def chat():
     data = request.json
     user_input = data.get("user_input", "")
-    user_id = request.remote_addr  # Use IP address as a temporary user ID
+    user_id = request.remote_addr
 
     response = get_midnight_response(user_input, user_id)
     return jsonify({"response": response})
