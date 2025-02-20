@@ -53,7 +53,7 @@ def log_error(message):
     """ Logs errors to help with debugging. """
     print(f"⚠️ ERROR: {message}")
 
-# 🧠 Generate AI Response
+# 🧠 Generate AI Response (Now Fixed)
 def get_midnight_response(user_input, user_id):
     user_input_lower = user_input.lower()
 
@@ -77,7 +77,7 @@ def get_midnight_response(user_input, user_id):
         if keyword in user_input_lower:
             return get_unique_response(user_id, responses)
 
-    # 🛠 OpenAI API Call (with error handling)
+    # 🛠 OpenAI API Call (with Proper Error Handling)
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
@@ -86,13 +86,13 @@ def get_midnight_response(user_input, user_id):
         )
         return get_unique_response(user_id, [response["choices"][0]["message"]["content"]])
 
-    except openai.error.OpenAIError as e:
+    except openai.OpenAIError as e:  # ✅ Corrected Error Handling
         log_error(f"OpenAI API Error: {e}")
-        return "Something went wrong with my thoughts... Try again."
+        return "I feel disconnected... Something is blocking my thoughts."
 
-    except Exception as e:
+    except Exception as e:  # ✅ Catches any other unknown errors
         log_error(f"Unexpected Error: {e}")
-        return "I feel... strange. Try again."
+        return "A strange force is interfering. Try again."
 
 # 🌐 Web Routes
 @app.route("/")
