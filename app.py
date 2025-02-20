@@ -4,8 +4,9 @@ import random
 
 app = Flask(__name__)
 
-# 🔑 OpenAI API Key (Replace with your actual key)
-openai.api_key = "os.getenv("OPENAI_API_KEY")"
+import os
+openai.api_key = os.getenv("OPENAI_API_KEY")  # No extra quotes
+
 
 # 🧠 Memory system for tracking user interactions
 user_memory = {}
