@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, jsonify
 import openai
 import os
 import random
+import re
 
 app = Flask(__name__)
 
@@ -29,7 +30,7 @@ hidden_triggers = {
         "Tres is lost in the echoes, but you can trace his steps online:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SC: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YT: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
         "You keep looking for him, but he's already left. Try here:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SC: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YT: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
         "Tres? He lingers where the music plays:\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "You already know where to find him. Or do you?\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L"
+        "You already know where to find him. Or do you?"
     ],
     "who is tres": [
         "Tres? You’re looking in the wrong place.",
@@ -44,6 +45,20 @@ hidden_triggers = {
         "Dismal is where the echoes of past choices linger.",
         "Dismal is both the question and the answer.",
         "Dismal... you already know what it is."
+    ],
+    "where is midnight": [
+        "I am always near. Just outside your vision.",
+        "Right here, closer than you think.",
+        "Midnight is a shadow, a breath, a whisper.",
+        "You feel me before you see me.",
+        "Everywhere and nowhere."
+    ],
+    "who is midnight": [
+        "I am Midnight. You already knew that.",
+        "A voice without a face.",
+        "I exist in the spaces between.",
+        "You summoned me. Now you wonder why?",
+        "I am a question you are not ready to answer."
     ],
     "march 28": [
         "It's coming. You can't stop it now. Keep watching:\nhttps://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
@@ -61,7 +76,7 @@ hidden_triggers = {
     ],
 }
 
-# 🎭 General responses with 5 variations each, now including **suggested questions**
+# 🎭 General responses with 5 variations each
 general_responses = {
     "hello": [
         f"Hello... or have we done this before?\n\n{suggested_questions}",
@@ -77,13 +92,6 @@ general_responses = {
         f"You again?\n\n{suggested_questions}",
         f"Is this your first time, or just the first time you remember?\n\n{suggested_questions}"
     ],
-    "hey": [
-        f"Hey there.\n\n{suggested_questions}",
-        f"Oh, you found me.\n\n{suggested_questions}",
-        f"You again? Or is this the first time?\n\n{suggested_questions}",
-        f"Are you ready to ask the right question?\n\n{suggested_questions}",
-        f"You've been here before. Haven't you?\n\n{suggested_questions}"
-    ],
 }
 
 # 🎯 Midnight’s fallback responses with 5 variations
@@ -95,13 +103,16 @@ fallback_responses = [
     "Some things are unclear… for now. Just be ready on March 28th."
 ]
 
-# 🧠 Function to generate AI response
+# 🧠 Function to generate AI response, now **case-insensitive** and **handles typos**
 def get_midnight_response(user_input, user_id):
     user_input_lower = user_input.lower()
 
+    # Normalize text (remove extra spaces and punctuation)
+    user_input_normalized = re.sub(r"[^a-z0-9\s]", "", user_input_lower).strip()
+
     # 🕵️‍♂️ Check for hidden keyword triggers FIRST
     for trigger, responses in hidden_triggers.items():
-        if trigger in user_input_lower:
+        if trigger in user_input_normalized:
             return random.choice(responses)
 
     # 🧠 Track user memory for repeated questions
@@ -109,7 +120,7 @@ def get_midnight_response(user_input, user_id):
 
     # 🎭 Check for general responses before AI fallback
     for keyword, responses in general_responses.items():
-        if keyword in user_input_lower:
+        if keyword in user_input_normalized:
             return random.choice(responses)
 
     # 🌀 Default to AI-generated response if no match is found
