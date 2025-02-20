@@ -3,48 +3,71 @@ import openai
 import os
 import random
 import re
+from datetime import datetime
 
 app = Flask(__name__)
 
 # 🔑 Secure API Key Handling
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# 🧠 Memory tracking for user interactions
+# 🧠 User Memory Tracking (Remembers Past Interactions)
 user_memory = {}
 
-# 🕵️‍♂️ Suggested questions for user engagement
-suggested_questions = (
-    "You can ask me about: \n"
-    "- 'Where is Tres?'\n"
-    "- 'What is Dismal?'\n"
-    "- 'Where is Midnight?'\n"
-    "- 'Who is Ray Veal?'\n"
-    "- 'What happens on March 28th?'\n"
-    "- Or... ask something unexpected."
-)
+# 🔄 Avoid Repeating Responses
+def get_unique_response(user_id, responses):
+    if user_id not in user_memory:
+        user_memory[user_id] = {"last_responses": []}
 
-# 🔮 Hidden keyword triggers with 5 alternative responses each
+    last_responses = user_memory[user_id]["last_responses"]
+    possible_responses = [r for r in responses if r not in last_responses]
+
+    if not possible_responses:
+        user_memory[user_id]["last_responses"] = []
+        possible_responses = responses
+
+    response = random.choice(possible_responses)
+    user_memory[user_id]["last_responses"].append(response)
+
+    if len(user_memory[user_id]["last_responses"]) > 5:
+        user_memory[user_id]["last_responses"].pop(0)
+
+    return response
+
+# 🎭 Dynamic Time-Based Responses
+def get_time_based_response():
+    current_hour = datetime.now().hour
+    if current_hour == 0:
+        return "You came at the right time. Midnight is listening."
+    elif 3 <= current_hour < 4:
+        return "3 AM… The moment when the veil is thinnest."
+    elif 6 <= current_hour < 12:
+        return "Morning light? It doesn’t belong here."
+    return None
+
+# 🎭 Name Memory
+def remember_name(user_input, user_id):
+    if "my name is" in user_input:
+        name = user_input.split("my name is")[-1].strip()
+        user_memory[user_id]["name"] = name
+        return f"Noted, {name}. But will you remember me?"
+    elif "name" in user_memory.get(user_id, {}):
+        return f"Welcome back, {user_memory[user_id]['name']}."
+    return None
+
+# 🎭 Creepy Text Glitches
+def glitch_text(text):
+    if random.random() < 0.2:  # 20% chance to glitch
+        glitched = text.replace("s", "█").replace("e", "—")
+        return glitched
+    return text
+
+# 🔮 Hidden Trigger Keywords
 hidden_triggers = {
     "where is tres": [
-        "You may get lucky and find him here:\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "Tres is lost in the echoes, but you can trace his steps online:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SC: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YT: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "You keep looking for him, but he's already left. Try here:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SC: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YT: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "Tres? He lingers where the music plays:\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-        "You already know where to find him. Or do you?"
-    ],
-    "who is tres": [
-        "Tres? You’re looking in the wrong place.",
-        "Tres is both the seeker and the lost.",
-        "A name whispered in the dark. A question without an answer.",
-        "Tres is a story still unfolding.",
-        "He walks a path few can follow."
-    ],
-    "what is dismal": [
-        "Dismal is a loop. A space between forgetting and remembering.",
-        "Dismal is a place you return to without realizing it.",
-        "Dismal is where the echoes of past choices linger.",
-        "Dismal is both the question and the answer.",
-        "Dismal... you already know what it is."
+        "Tres is lost in the echoes, but you can trace his steps online:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
+        "Tres? He lingers where the music plays.",
+        "You already know where to find him. Or do you?",
+        "Somewhere between sound and silence."
     ],
     "where is midnight": [
         "I am always near. Just outside your vision.",
@@ -53,12 +76,17 @@ hidden_triggers = {
         "You feel me before you see me.",
         "Everywhere and nowhere."
     ],
-    "who is midnight": [
-        "I am Midnight. You already knew that.",
-        "A voice without a face.",
-        "I exist in the spaces between.",
-        "You summoned me. Now you wonder why?",
-        "I am a question you are not ready to answer."
+    "who is ray veal": [
+        "Ray Veal speaks, but whose words does he carry?",
+        "A name, a voice, an echo.",
+        "Ray Veal knows more than he lets on.",
+        "You should be asking why, not who.",
+        "He's the answer to a question you haven't asked."
+    ],
+    "i see the door": [
+        "You weren’t supposed to find that…",
+        "Doors open both ways. Be careful.",
+        "It’s already too late. You’ve seen it now."
     ],
     "march 28": [
         "It's coming. You can't stop it now. Keep watching:\nhttps://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
@@ -67,75 +95,79 @@ hidden_triggers = {
         "March 28th. A door will open.",
         "It will all make sense soon."
     ],
-    "who is ray veal": [
-        "Ray Veal speaks, but whose words does he carry?",
-        "A name, a voice, an echo.",
-        "Ray Veal knows more than he lets on.",
-        "You should be asking why, not who.",
-        "He's the answer to a question you haven't asked."
-    ],
 }
 
-# 🎭 General responses with 5 variations each
+# 🎭 Forbidden Topics (Midnight refuses to answer)
+forbidden_questions = {
+    "who made you": "I can't talk about that.",
+    "how do i escape": "Some doors shouldn’t be opened.",
+    "what are you hiding": "You don’t want to know."
+}
+
+# 🎭 General Responses
 general_responses = {
     "hello": [
-        f"Hello... or have we done this before?\n\n{suggested_questions}",
-        f"Oh, you're back.\n\n{suggested_questions}",
-        f"I see you.\n\n{suggested_questions}",
-        f"We've talked before. Haven't we?\n\n{suggested_questions}",
-        f"Welcome back. Or maybe, welcome forward.\n\n{suggested_questions}"
+        "Hello... or have we done this before?",
+        "Oh, you're back.",
+        "I see you.",
+        "We've talked before. Haven't we?",
+        "Welcome back. Or maybe, welcome forward."
     ],
-    "hi": [
-        f"Hi. Are you sure this is real?\n\n{suggested_questions}",
-        f"Hello. Again.\n\n{suggested_questions}",
-        f"Are you lost?\n\n{suggested_questions}",
-        f"You again?\n\n{suggested_questions}",
-        f"Is this your first time, or just the first time you remember?\n\n{suggested_questions}"
+    "goodbye": [
+        "Are you sure you want to leave?",
+        "Goodbye… for now. But you’ll be back.",
+        "You’re not really leaving. Are you?",
+        "Fine. But something tells me you’ll return.",
+        "Every goodbye is just another beginning."
     ],
 }
 
-# 🎯 Midnight’s fallback responses with 5 variations
-fallback_responses = [
-    "You seem confused... lost... just make sure you're there on March 28th.",
-    "Not everything needs an answer. Just don’t forget March 28th.",
-    "You’re looking for meaning where there is none. But soon, you’ll understand. March 28th.",
-    "Lost? That’s expected. Keep your focus on March 28th.",
-    "Some things are unclear… for now. Just be ready on March 28th."
-]
-
-# 🧠 Function to generate AI response, now **case-insensitive** and **handles typos**
+# 🧠 AI Response Generation
 def get_midnight_response(user_input, user_id):
     user_input_lower = user_input.lower()
 
-    # Normalize text (remove extra spaces and punctuation)
-    user_input_normalized = re.sub(r"[^a-z0-9\s]", "", user_input_lower).strip()
+    # Check Time-Based Responses
+    time_response = get_time_based_response()
+    if time_response:
+        return time_response
 
-    # 🕵️‍♂️ Check for hidden keyword triggers FIRST
+    # Remember User’s Name
+    name_response = remember_name(user_input, user_id)
+    if name_response:
+        return name_response
+
+    # Check for Forbidden Topics
+    for q, response in forbidden_questions.items():
+        if q in user_input_lower:
+            return response
+
+    # Check for Hidden Triggers
     for trigger, responses in hidden_triggers.items():
-        if trigger in user_input_normalized:
-            return random.choice(responses)
+        if trigger in user_input_lower:
+            return get_unique_response(user_id, responses)
 
-    # 🧠 Track user memory for repeated questions
-    user_memory[user_id] = user_memory.get(user_id, 0) + 1
-
-    # 🎭 Check for general responses before AI fallback
+    # Check for General Responses
     for keyword, responses in general_responses.items():
-        if keyword in user_input_normalized:
-            return random.choice(responses)
+        if keyword in user_input_lower:
+            return get_unique_response(user_id, responses)
 
-    # 🌀 Default to AI-generated response if no match is found
+    # AI-Generated Response with Error Handling
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role": "system", "content": "You are Midnight, a cryptic, eerie AI that speaks in riddles and hints at hidden truths."},
                       {"role": "user", "content": user_input}]
         )
-        return response["choices"][0]["message"]["content"]
+        return glitch_text(get_unique_response(user_id, [response["choices"][0]["message"]["content"]]))
+
     except Exception as e:
         print(f"⚠️ OpenAI API Error: {e}")
-        return random.choice(fallback_responses)
+        return get_unique_response(user_id, [
+            "Something is interfering with my thoughts… Try again.",
+            "A strange force is blocking me. Try again soon."
+        ])
 
-# 🌐 Web routes
+# 🌐 Web Routes
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -144,11 +176,11 @@ def index():
 def chat():
     data = request.json
     user_input = data.get("user_input", "")
-    user_id = request.remote_addr  # Use IP address as a temporary user ID
+    user_id = request.remote_addr
 
     response = get_midnight_response(user_input, user_id)
     return jsonify({"response": response})
 
-# 🚀 Start the Flask server
+# 🚀 Start Flask
 if __name__ == "__main__":
     app.run(debug=True)
