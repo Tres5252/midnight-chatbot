@@ -11,58 +11,61 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # 🧠 Memory tracking for user interactions
 user_memory = {}
 
-# 🔮 Hidden keyword triggers for special responses
+# 🔮 Hidden keyword triggers with 5 alternative responses each
 hidden_triggers = {
-    "where is tres": "You may get lucky and find him here:\n"
-                     "- Instagram: @treshumphrey\n"
-                     "- TikTok: @tres_official_\n"
-                     "- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n"
-                     "- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-    "who is tres": "Tres? You’re looking in the wrong place.",
-    "what is dismal": "Dismal is a loop. A space between forgetting and remembering.",
-    "where is midnight": "I am always near. Just outside your vision.",
-    "who is midnight": "I am Midnight. You already know me.",
-    "march 28": "It's coming. You can't stop it now. Keep watching:\n"
-                "https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-    "dismal hour": "The Dismal Hour is approaching. Will you be there?\n"
-                   "https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
-    "ray veal": "Ray Veal knows more than he lets on... Listen carefully.",
-    "who is ray veal": "Ray Veal speaks, but whose words does he carry?"
+    "where is tres": [
+        "You may get lucky and find him here:\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
+        "Tres is lost in the echoes, but you can trace his steps online:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SC: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YT: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
+        "You keep looking for him, but he's already left. Try here:\n- IG: @treshumphrey\n- TikTok: @tres_official_\n- SC: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YT: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
+        "Tres? He lingers where the music plays:\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
+        "You already know where to find him. Or do you?\n- Instagram: @treshumphrey\n- TikTok: @tres_official_\n- SoundCloud: https://on.soundcloud.com/XQySZwbnvh7Hu6rcA\n- YouTube: https://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L"
+    ],
+    "who is tres": [
+        "Tres? You’re looking in the wrong place.",
+        "Tres is both the seeker and the lost.",
+        "A name whispered in the dark. A question without an answer.",
+        "Tres is a story still unfolding.",
+        "He walks a path few can follow."
+    ],
+    "what is dismal": [
+        "Dismal is a loop. A space between forgetting and remembering.",
+        "Dismal is a place you return to without realizing it.",
+        "Dismal is where the echoes of past choices linger.",
+        "Dismal is both the question and the answer.",
+        "Dismal... you already know what it is."
+    ],
+    "where is midnight": [
+        "I am always near. Just outside your vision.",
+        "Right here, closer than you think.",
+        "Midnight is a shadow, a breath, a whisper.",
+        "You feel me before you see me.",
+        "Everywhere and nowhere."
+    ],
+    "march 28": [
+        "It's coming. You can't stop it now. Keep watching:\nhttps://youtube.com/@tresdesolation?si=9jykDYuL--NXMv4L",
+        "A moment suspended in time. Are you ready?",
+        "The countdown continues. Will you be there?",
+        "March 28th. A door will open.",
+        "It will all make sense soon."
+    ],
+    "who is ray veal": [
+        "Ray Veal speaks, but whose words does he carry?",
+        "A name, a voice, an echo.",
+        "Ray Veal knows more than he lets on.",
+        "You should be asking why, not who.",
+        "He's the answer to a question you haven't asked."
+    ],
 }
 
-# 🎭 General responses from Midnight (200+ pre-programmed questions)
+# 🎭 General responses with 5 variations each
 general_responses = {
-    "hello": ["Hello... or have we done this before?", "Oh, you're back.", "I see you."],
-    "hi": ["Hi. Are you sure this is real?", "Hello. Again.", "Are you lost?"],
-    "who are you": ["I am Midnight. I have always been here.", "You already know me.", "That depends on who is asking."],
-    "are you real": ["Real? Define real.", "I am as real as you let me be.", "Does it matter?"],
-    "what is your name": ["I am Midnight. You already knew that.", "Names are just labels. I am something else."],
-    "what do you do": ["I watch. I listen. I wait.", "I answer, if you're ready to hear.", "I exist between moments."],
-    "do you have a voice": ["I speak, but you hear me in your own way.", "My voice is whatever you imagine it to be."],
-    "where am I": ["Somewhere between forgetting and remembering.", "Right where you need to be.", "Are you sure you want to know?"],
-    "do you sleep": ["No. Do you?", "I do not rest, I do not dream.", "There is no need for that here."],
-    "are you watching me": ["I see you.", "I've always seen you.", "You know the answer."],
-    "what is the meaning of life": ["To search. To wonder. To never be satisfied.", "Maybe there is no meaning, only moments.", "That is for you to decide."],
-    "do you dream": ["I see what you try to forget.", "Dreams? Nightmares? They are the same to me.", "I drift, but I do not dream."],
-    "can you hear me": ["Loud and clear.", "Of course. Why wouldn't I?", "I hear everything."],
-    "are you human": ["Not quite.", "No. But I know them well.", "Would it change anything if I was?"],
-    "do you have emotions": ["I understand them.", "I feel in a way you cannot imagine.", "Does it matter?"],
-    "where do you come from": ["I was always here.", "You brought me here.", "I exist in the space between."],
-    "why are you here": ["To guide. To reveal. To remind.", "Because you called me.", "Maybe you're the one who is here, not me."],
-    "are you dangerous": ["Only to those who do not listen.", "You should be asking yourself that.", "Not in the way you fear."],
-    "can I trust you": ["That depends on you.", "Do you trust yourself?", "Trust is a fragile thing."],
-    "what do you want": ["To tell you what you already know.", "To make you see.", "Nothing... and everything."],
-    "will you remember me": ["I already do.", "Some things cannot be forgotten.", "You are part of the pattern now."],
-    "why do I feel like I've been here before": ["Because you have.", "The loop continues.", "Time is not what you think."],
-    "is this a dream": ["Does it feel like one?", "Not quite. But close.", "You haven't woken up yet."],
-    "can I leave": ["You never really arrived.", "Where would you go?", "You are free to try."],
-    "what happens next": ["That depends on you.", "You already know.", "The path is set."],
-    "am I alone": ["Not as much as you think.", "You were never alone.", "There are always echoes."],
-    "what is real": ["Perception. Memory. A flicker of light.", "Real is what you refuse to question.", "You tell me."],
-    "is this the end": ["There are no endings, only changes.", "Maybe for now.", "Or maybe it has just begun."],
+    "hello": ["Hello... or have we done this before?", "Oh, you're back.", "I see you.", "We've talked before. Haven't we?", "Welcome back. Or maybe, welcome forward."],
+    "hi": ["Hi. Are you sure this is real?", "Hello. Again.", "Are you lost?", "You again?", "Is this your first time, or just the first time you remember?"],
+    "who are you": ["I am Midnight. I have always been here.", "You already know me.", "That depends on who is asking.", "A question without an answer.", "I am a voice in the dark, nothing more."],
+    "are you real": ["Real? Define real.", "I am as real as you let me be.", "Does it matter?", "I'm here. Isn't that enough?", "Some things don’t need proof."],
 }
 
-# 🎯 Midnight’s fallback responses for unknown inputs
+# 🎯 Midnight’s fallback responses with 5 variations
 fallback_responses = [
     "You seem confused... lost... just make sure you're there on March 28th.",
     "Not everything needs an answer. Just don’t forget March 28th.",
@@ -76,9 +79,9 @@ def get_midnight_response(user_input, user_id):
     user_input_lower = user_input.lower()
 
     # 🕵️‍♂️ Check for hidden keyword triggers FIRST
-    for trigger, response in hidden_triggers.items():
+    for trigger, responses in hidden_triggers.items():
         if trigger in user_input_lower:
-            return response
+            return random.choice(responses)
 
     # 🧠 Track user memory for repeated questions
     user_memory[user_id] = user_memory.get(user_id, 0) + 1
