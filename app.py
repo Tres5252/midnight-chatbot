@@ -72,7 +72,7 @@ fallback_responses = [
     "Some things are unclear… for now. Just be ready on March 28th."
 ]
 
-# 🧠 Modify response function to include topic suggestions for greetings
+# 🧠 Update API call for OpenAI v1.0+
 def get_midnight_response(user_input, user_id):
     user_input_lower = user_input.lower()
 
@@ -93,10 +93,13 @@ def get_midnight_response(user_input, user_id):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
-            messages=[{"role": "system", "content": "You are Midnight, a cryptic, eerie AI that speaks in riddles and hints at hidden truths."},
-                      {"role": "user", "content": user_input}]
+            messages=[
+                {"role": "system", "content": "You are Midnight, a cryptic, eerie AI that speaks in riddles and hints at hidden truths."},
+                {"role": "user", "content": user_input}
+            ],
+            temperature=0.7
         )
-        return response["choices"][0]["message"]["content"]
+        return response.choices[0].message["content"]
     except Exception as e:
         print(f"⚠️ Error with OpenAI API: {e}")
         return random.choice(fallback_responses)
